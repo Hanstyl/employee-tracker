@@ -1,0 +1,30 @@
+{
+  "name": "employee-tracker",
+  "version": "1.0.0",
+  "description": "A command-line application for managing a company's employees using node, inquirer, and MySQL.",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm start"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Hanstyl/employee-tracker.git"
+  },
+  "keywords": [
+    "employee",
+    "tracker",
+    "node",
+    "inquirer",
+    "MySQL"
+  ],
+  "author": "Nathan Nelson",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Hanstyl/employee-tracker/issues"
+  },
+  "homepage": "https://github.com/Hanstyl/employee-tracker#readme",
+  "dependencies": {
+    "console.table": "^0.10.0",
+    "inquirer": "^8.2.0"
+  }
+}
