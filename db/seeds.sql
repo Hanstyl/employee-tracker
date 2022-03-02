@@ -1,11 +1,23 @@
-INSERT INTO department(department_name)
-VALUES("Engineering"), ("Finance"), ("Legal");
+INSERT INTO departments (department_name)
+VALUES
+	('Management'),
+	('HR'),
+	('SALES'),
+	('Purchasing');
+
+INSERT INTO roles (title, salary, department_id)
+VALUES
+	('General Manager', 150000, 1),
+	('Junior Manager', 100000, 2),
+	('Human Resources Associate', 65000, 3),
+	('Sales Employee', 40000, 4),
+	('Purchasing Advisor', 50000, 5);
 
 
-INSERT INTO role(title, salary, department_id)
-VALUES("Engineer", 65000, 1), ("Senior Engineer", 100000, 1), ("CFO", 400000, 3), ("Chief Counsel", 1000000, 4);
-
-
-INSERT INTO employee(first_name, last_name, role_id, manager_id)
-VALUES ('Mark', 'Santiago', 1, 2), ('Peter', 'Dinkledge', 1, null), ('Berry', 'Hunter', 1, 2), ('Rick', 'Jefferson', 2, 2), ('Hunter', 'Hoffman', 4, null);
-
+INSERT INTO employees (first_name, last_name, role_id, manager_id)
+VALUES
+	('Harry', 'Potter', 1, 0),
+	('Albus', 'dumbledore', 2, 1),
+	('Severus', 'Snape', 3, 2),
+	('Ronald', 'Weasly', 4, 3),
+	('Hermoine', 'Granger', 5, 4);
