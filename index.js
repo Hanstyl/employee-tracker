@@ -1,32 +1,28 @@
 const connect = require("./db/connect");
-const { prompt } = require("inquirer");
-const consoleTable = require("console.table");
-const DB = require("./db/index");
+const Database = require("./db/index");
 const db = require("./db/index");
+const consoleTable = require("console.table");
+const { prompt } = require("inquirer");
 
 connect.connect((err) => {
   if (err) throw err;
   start();
 });
 
-// WHEN I start the application
-// THEN I am presented with the following options: view all departments, view all roles, view all employees, add a department, add a role, add an employee, and update an employee role- DONE
-
-//separate functions for each individual section
 const start = () => {
   prompt([
     {
       type: "list",
-      name: "options",
-      message: "Please select an option?",
+      name: "actions",
+      message: "Make a selection?",
       choices: [
         {
           name: "View all employees",
-          value: "View_employees",
+          value: "Find_employees",
         },
         {
           name: "View all departments",
-          value: "View_departments",
+          value: "Find_departments",
         },
         {
           name: "View all roles",
@@ -55,15 +51,15 @@ const start = () => {
       ],
     },
   ]).then((res) => {
-    //switch case or tons of else if's
-    let options = res.options;
-    switch (options) {
-      case "View_employees":
-        viewEmployees();
+
+    let actions = res.actions;
+    switch (actions) {
+      case "Find_employees":
+        findEmployees();
         break;
 
-      case "View_departments":
-        viewDepartments();
+      case "Find_departments":
+        findDepartments();
         break;
 
       case "View_roles":
@@ -82,8 +78,8 @@ const start = () => {
         addEmployee();
         break;
 
-      case "Update_role":
-        updateEmployeeRole();
+      case "Update_employee_role":
+        updateEmpRole();
         break;
 
       default:
@@ -92,9 +88,7 @@ const start = () => {
   });
 };
 
-// WHEN I choose to view all departments
-// THEN I am presented with a formatted table showing department names and department ids- DONE
-const viewDepartments = () => {
+const findDepartments = () => {
   const sql = `SELECT * FROM department`;
 
   connect.query(sql, (err, res) => {
@@ -103,13 +97,11 @@ const viewDepartments = () => {
       console.log(table);
       start();
     } else {
-      console.log("YOU MESSED UP DEPARTMENT", err);
+      console.log("Cannot find department!", err);
     }
   });
 };
 
-// WHEN I choose to view all roles
-// THEN I am presented with the job title, role id, the department that role belongs to, and the salary for that role - DONE
 const viewRoles = () => {
   const sql = `SELECT roles.id, roles.title, department_name AS department, roles.salary
     FROM roles 
@@ -121,14 +113,12 @@ const viewRoles = () => {
       console.log(table);
       start();
     } else {
-      console.log("YOU MESSED UP ROLES", err);
+      console.log("Cannot find requested roles!", err);
     }
   });
 };
 
-// WHEN I choose to view all employees
-// THEN I am presented with a formatted table showing employee data, including employee ids, first names, last names, job titles, departments, salaries, and managers that the employees report to
-const viewEmployees = () => {
+const findEmployees = () => {
   const sql = `SELECT 
     employee.id,
     employee.first_name,  
@@ -137,13 +127,13 @@ const viewEmployees = () => {
     department.department_name AS department,
     roles.salary, 
     CONCAT(manager.first_name, ' ', manager.last_name) AS manager
-FROM employee
-LEFT JOIN roles 
-ON employee.role_id = roles.id
-LEFT JOIN department
-ON roles.department_id = department.id
-LEFT JOIN employee manager 
-ON manager.id = employee.manager_id;`;
+    FROM employee
+    LEFT JOIN roles 
+    ON employee.role_id = roles.id
+    LEFT JOIN department
+    ON roles.department_id = department.id
+    LEFT JOIN employee manager 
+    ON manager.id = employee.manager_id;`;
 
   connect.query(sql, (err, res) => {
     if (res) {
@@ -151,7 +141,7 @@ ON manager.id = employee.manager_id;`;
       console.log(table);
       start();
     } else {
-      console.log("YOU MESSED UP EMPLOYEE", err);
+      console.log("No such employee exists!", err);
     }
   });
 };
@@ -160,19 +150,19 @@ const addDepartment = () => {
   prompt({
     type: "input",
     name: "addDepartment",
-    message: "Please insert new department name.",
+    message: "Name of new department?",
   })
     .then((res) => {
       let department = res.addDepartment;
-      DB.makeDepartment(department).then(() =>
-        console.log(`added ${department}`)
+      Database.createDepartment(department).then(() =>
+        console.log(`${department} department added`)
       );
     })
     .then(() => start());
 };
 
 const addRole = () => {
-  DB.findAllDepartments().then(([department]) => {
+  Database.findAllDepartments().then(([department]) => {
     const departmentOptions = department.map(({ id, department_name }) => ({
       name: department_name,
       value: id,
@@ -181,24 +171,24 @@ const addRole = () => {
       {
         type: "input",
         name: "addRole",
-        message: "Please insert new Role here.",
+        message: "Title of new role?",
       },
       {
         type: "input",
         name: "addSalary",
-        message: "Please add salary amount.",
+        message: "Salary of new role?",
       },
       {
         type: "list",
         name: "department",
-        message: "Which department does the role belong too?",
+        message: "What department is this role under?",
         choices: departmentOptions,
       },
-    ]).then((answers) => {
-      DB.createRole(answers.addRole, answers.department, answers.addSalary)
+    ]).then((responses) => {
+      Database.createRole(responses.addRole, responses.department, responses.addSalary)
         .then(() =>
           console.log(
-            `added ${answers.addRole}, added ${answers.department}, added ${answers.addSalary}`
+            `${responses.addRole} have been added, ${responses.department} have been added, ${responses.addSalary} have been added`
           )
         )
         .then(() => start());
@@ -206,16 +196,14 @@ const addRole = () => {
   });
 };
 
-// WHEN I choose to add an employee
-// THEN I am prompted to enter the employee’s first name, last name, role, and manager, and that employee is added to the database
 const addEmployee = () => {
-  DB.findAllRoles().then(([employee]) => {
-    const employeeRoleOptions = employee.map(({ id, title }) => ({
+  Database.findAllRoles().then(([employee]) => {
+    const employeeRoleView = employee.map(({ id, title }) => ({
       name: title,
       value: id,
     }));
-    DB.findAllEmployees().then(([manager]) => {
-      const managerOptions = manager.map(
+    Database.findAllEmployees().then(([manager]) => {
+      const managerView = manager.map(
         ({ id, first_name, last_name }) => ({
           name: `${first_name} ${last_name}`,
           value: id,
@@ -225,35 +213,35 @@ const addEmployee = () => {
         {
           type: "input",
           name: "firstName",
-          message: "Please enter the Employee's first name.",
+          message: "Employee's first name?",
         },
         {
           type: "input",
           name: "lastName",
-          message: "Please enter the Employee's last name.",
+          message: "Employee's last name?",
         },
         {
           type: "list",
           name: "roles",
-          message: "Which role does your employee belong too?",
-          choices: employeeRoleOptions,
+          message: "Role of your new employee?",
+          choices: employeeRoleView,
         },
         {
           type: "list",
           name: "manager",
-          message: "Select manager",
-          choices: managerOptions,
+          message: "Who is this employee's manager?",
+          choices: managerView,
         },
-      ]).then((answers) => {
-        DB.addEmployee(
-          answers.firstName,
-          answers.lastName,
-          answers.roles,
-          answers.manager
+      ]).then((responses) => {
+        Database.addEmployee(
+          responses.firstName,
+          responses.lastName,
+          responses.roles,
+          responses.manager
         )
           .then(() =>
             console.log(
-              ` added ${answers.roles}, added ${answers.firstName}, added ${answers.lastName}, added ${answers.manager}`
+              ` ${responses.roles} has been added, ${responses.firstName} ${responses.lastName} has been added, ${responses.manager} has been added`
             )
           )
           .then(() => start());
@@ -261,12 +249,10 @@ const addEmployee = () => {
     });
   });
 };
-// WHEN I choose to update an employee role
-// THEN I am prompted to select an employee to update and their new role and this information is updated in the database
 
-const updateEmployeeRole = () => {
-  DB.findAllEmployees().then(([employee]) => {
-    const employeeOptions = employee.map(({ id, first_name, last_name }) => ({
+const updateEmpRole = () => {
+  Database.findAllEmployees().then(([employee]) => {
+    const employeeView = employee.map(({ id, first_name, last_name }) => ({
       name: `${first_name} ${last_name}`,
       value: id,
     }));
@@ -274,14 +260,14 @@ const updateEmployeeRole = () => {
       {
         type: "list",
         name: "employees",
-        message: "Select employee",
-        choices: employeeOptions,
+        message: "Which employee are you updating?",
+        choices: employeeView,
       },
-    ]).then((answers) => {
-      let employeeId = answers.employees;
-      console.log(answers.employees);
-      DB.findAllRoles().then(([role]) => {
-        const roleOptions = role.map(({ id, title }) => ({
+    ]).then((responses) => {
+      let employeeId = responses.employees;
+      console.log(responses.employees);
+      Database.findAllRoles().then(([role]) => {
+        const roleView = role.map(({ id, title }) => ({
           name: title,
           value: id,
         }));
@@ -289,16 +275,16 @@ const updateEmployeeRole = () => {
           {
             type: "list",
             name: "role",
-            message: "Select role",
-            choices: roleOptions,
+            message: "What is this employee's updated role?",
+            choices: roleView,
           },
         ])
-          .then((answers) => {
-            let role = answers.role;
-            console.log(answers.role);
+          .then((responses) => {
+            let role = responses.role;
+            console.log(responses.role);
             console.log("employeeId", employeeId)
             db.updateRole(role, employeeId)
-              .then(() => console.log("Employee roll updated"))
+              .then(() => console.log("Your employee's role updated"))
               .then(() => start());
 
           })
@@ -307,7 +293,6 @@ const updateEmployeeRole = () => {
   });
 };
 
-// `UPDATE employee SET role_id = ? WHERE id = ?`
 const quit = () => {
   console.log("Goodbye");
   process.exit();
