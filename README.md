@@ -21,7 +21,8 @@
 
   This is what the application will look like running from the command line. 
 
-  ![Screen Shot 2022-03-06 at 2 40 13 PM](https://user-images.githubusercontent.com/79775889/156943287-1c96adfa-de26-4d67-8369-ed711b87c67a.png)
+  ![Screen Shot 2022-03-06 at 3 26 42 PM](https://user-images.githubusercontent.com/79775889/156944737-d789f9ce-9077-4edc-9847-03c511a5f6aa.png)
+
 
 
   ## Contributors
